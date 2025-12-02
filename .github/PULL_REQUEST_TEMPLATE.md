@@ -1,78 +1,56 @@
-# Pull Request Template: Apex Velocity Review
+# Pull Request Checklist & Review Template
 
-## 1. Core Commit Identification
+**Repository:** `VideoSum-AI-Powered-Video-Summarization-Mobile-Platform`
 
-<!-- **Crucial:** Use Conventional Commits format for the title. -->
-
-**Type:** `feat` | `fix` | `chore` | `docs` | `refactor` | `test` | `style`
-**Scope:** (e.g., `api`, `ui`, `parser`)
-**Subject:** Concise summary of the change (max 50 chars).
-
-**Example Title:** `feat(video-processor): Implement exponential backoff for cloud API calls`
+This template ensures that all Pull Requests (PRs) meet the **Apex Technical Authority** standards for zero-defect, high-velocity deployment on the React Native/Expo platform.
 
 ---
 
-## 2. Feature/Fix Context & Value Proposition
+## 🚀 Summary of Changes
 
-### BLUF (Bottom Line Up Front)
-*What critical problem does this solve or feature does this introduce? (One sentence)*
+<!-- Briefly describe what this PR achieves. Link relevant issues using keywords like `Fixes #123` or `Implements feature #456`. -->
 
-[Describe the intent here]
+## ✅ Checklist (Developer Actions)
 
-### Details
-<!-- Explain the 'Why' behind this PR. Link to any related issues using `Closes #XXX` -->
+Before requesting a review, ensure *every* item below is checked:
 
-- [ ] This PR addresses a critical bug.
-- [ ] This PR introduces a new feature based on specification X.
-- [ ] This PR is a refactor/cleanup conforming to Apex Standards.
+- [ ] **Code Quality:** All code adheres to strict TypeScript standards and Biome/Ruff formatting rules (if applicable to tooling). DRY principles maintained.
+- [ ] **Feature Isolation:** Changes are atomic and focus on a single feature or fix. No scope creep.
+- [ ] **Testing:** New unit tests (Vitest) or E2E tests (Playwright/Detox) are added/updated to cover new logic. All existing tests pass.
+- [ ] **Performance:** No blocking UI operations. Asynchronous operations are correctly handled (React Query/Redux Toolkit setup).
+- [ ] **Architecture:** Changes respect the Feature-Sliced Design (FSD) boundaries within the React Native structure (Layers: App, Pages, Features, Entities, Shared).
+- [ ] **Documentation:** Relevant internal code comments (JSDoc/TSDoc) are updated.
+- [ ] **CI/CD Readiness:** Local builds (`npm run build:android` / `npm run build:ios`) succeed without warnings.
+- [ ] **Security:** No hardcoded secrets. Dependencies are reviewed for known vulnerabilities.
 
-**Related Issues:** (e.g., `Closes #42`, `Relates to #101`)
+## 🧪 Verification Steps (Reviewer Actions)
 
----
+Reviewers must verify the following in addition to code logic:
 
-## 3. Architectural Impact & Verification
+1.  **Build Verification:** Can the reviewer successfully build and run the platform on both target OSs (iOS/Android)?
+    *   *Command:* `npx expo run:ios` and `npx expo run:android`
+2.  **Feature Validation:** Does the change behave *exactly* as described in the issue/summary?
+3.  **Performance Spot Check:** Test summarization speed on a sample video file. Look for UI stuttering during video processing/API calls.
+4.  **Type Safety:** Review type definitions. Are there any `any` types introduced that could have been strictly typed?
 
-### Architectural Pattern Adherence
-*(Self-Audit against SOLID, CQS, and 12-Factor principles)*
+## ✍️ Architectural Notes (Self-Correction/Alignment)
 
-- [ ] **SOLID:** Does this change violate any SOLID principles? (If yes, specify where and why it was deemed necessary for this context.)
-- [ ] **CQS:** Are all new/modified functions strictly Commands or Queries? (No side effects in Queries.)
-- [ ] **Immutability:** Are state changes handled via immutable updates where applicable (especially React state/props)?
+<!-- Use this section to document any deviations from the standard FSD structure or any complex async interactions that require deep understanding. -->
 
-### Testing Strategy & Coverage
-<!-- Link to associated test files or describe new test scenarios added. -->
+## 🏷️ Related Artifacts
 
-- [ ] **Unit Tests Added/Updated:** (Vitest/Jest)
-- [ ] **E2E Tests Added/Updated:** (Playwright)
-- [ ] **Test Coverage Impact:** (e.g., Increased from 85% to 91%)
-
-**Verification Steps:**
-1. Perform step A...
-2. Observe result B...
-3. Verify endpoint C...
+*   **Project Repository:** [VideoSum-AI-Powered-Video-Summarization-Mobile-Platform](https://github.com/chirag127/VideoSum-AI-Powered-Video-Summarization-Mobile-Platform)
+*   **CI Pipeline Status:** [View Workflow](https://github.com/chirag127/VideoSum-AI-Powered-Video-Summarization-Mobile-Platform/actions/workflows/ci.yml)
+*   **Latest Release:** [Releases](https://github.com/chirag127/VideoSum-AI-Powered-Video-Summarization-Mobile-Platform/releases)
 
 ---
 
-## 4. Project Environment & Tooling Updates (Apex Mandate)
+**Reviewer Sign-off:**
 
-*(Check if this PR required updates to linting, dependencies, or CI/CD.)*
+- [ ] Approved
+- [ ] Requested Changes (Comments attached)
 
-- [ ] **Biome/Ruff Config Updated:** (If configuration files changed)
-- [ ] **Dependencies Updated:** (Check `package.json` - Specify major changes)
-- [ ] **CI/CD Workflow Changed:** (Check `.github/workflows/` changes)
-- [ ] **Documentation Updated:** (`README.md`, `AGENTS.md`, etc.)
+**Status Update:**
 
----
-
-## 5. Reviewer Checklist (For Reviewer)
-
-This section is for the reviewer to mark completion.
-
-- [ ] **Architectural Alignment:** Does this fit the React Native/Expo FSD structure?
-- [ ] **Security Audit:** Input sanitization reviewed (especially video input handling)?
-- [ ] **Performance:** Checked for synchronous blocking operations on the JS thread?
-- [ ] **Code Hygiene:** Naming conventions and verticality optimized?
-- [ ] **Linter Green:** `biome check --error-on-warnings` passed locally.
-- [ ] **Tests Pass:** `npm run test` passed locally.
-
-**LGTM ✅** (Looks Good To Me) if all checks pass.
+- [ ] Merge Ready
+- [ ] Blocked (Reason: ___________)
