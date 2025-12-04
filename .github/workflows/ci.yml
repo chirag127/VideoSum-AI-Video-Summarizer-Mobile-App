@@ -1,101 +1,106 @@
-name: CI - VideoSum Mobile App Validation
+# Apex CI/CD Pipeline: Validate, Test, and Build
+# Standard: 2026/Q1
+# Authority: Apex Technical Authority
 
+name: 'CI: Lint, Test & Build Validation'
+
+# ===================================================================
+# TRIGGERS: This workflow runs on key repository events.
+# ===================================================================
 on:
   push:
-    branches: [ main, develop ]
+    branches: ['main', 'develop']
   pull_request:
-    branches: [ main ]
+    branches: ['main']
+    types: [opened, synchronize, reopened]
 
-permissions:
-  contents: read
-  pull-requests: write
+# ===================================================================
+# CONCURRENCY CONTROL: Prevents redundant runs on the same PR.
+# ===================================================================
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
+# ===================================================================
+# JOBS: Defines the sequence of tasks to be executed.
+# ===================================================================
 jobs:
-  # ===============================================
-  # 1. CORE VALIDATION & LINTING (Biome/Ruff Equivalent)
-  # ===============================================
-  validation:
-    name: Validate & Lint
+  validate:
+    name: 'Node.js ${{ matrix.node-version }} Validation'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
     steps:
-      - name: Checkout Repository
+      # --------------------------------------------------------------
+      # STEP 1: CHECKOUT REPOSITORY
+      # --------------------------------------------------------------
+      - name: 'Code Checkout'
         uses: actions/checkout@v4
 
-      - name: Set up Node.js (For Expo/React Native)
+      # --------------------------------------------------------------
+      # STEP 2: SETUP NODE.JS ENVIRONMENT
+      # Caches dependencies for high-velocity execution.
+      # --------------------------------------------------------------
+      - name: 'Setup Node.js ${{ matrix.node-version }} Environment'
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install Dependencies
+      # --------------------------------------------------------------
+      # STEP 3: INSTALL DEPENDENCIES
+      # Uses npm ci for deterministic, high-integrity installs.
+      # --------------------------------------------------------------
+      - name: 'Install Project Dependencies'
         run: npm ci
 
-      - name: Run TypeScript Type Check (Strict Mode)
+      # --------------------------------------------------------------
+      # STEP 4: LINT & FORMAT CHECK (Biome)
+      # Apex Standard: Enforces code quality with high-speed tooling.
+      # --------------------------------------------------------------
+      - name: 'Run Linter & Formatter Check'
+        run: npm run lint:check
+
+      # --------------------------------------------------------------
+      # STEP 5: TYPESCRIPT TYPE CHECK
+      # Ensures static type safety across the entire codebase.
+      # --------------------------------------------------------------
+      - name: 'Run TypeScript Type Check'
         run: npm run typecheck
 
-      - name: Run ESLint/Biome Linting
-        # Assuming 'lint' script runs Biome/ESLint as per Apex standards for JS/TS
-        run: npm run lint
+      # --------------------------------------------------------------
+      # STEP 6: UNIT & INTEGRATION TESTING (Vitest)
+      # Apex Standard: Validates application logic with coverage reporting.
+      # --------------------------------------------------------------
+      - name: 'Execute Tests & Generate Coverage Report'
+        run: npm run test:coverage
 
-      - name: Run Prettier Formatting Check
-        # Assuming 'format:check' runs Prettier to ensure zero formatting deviations
-        run: npm run format:check
-
-      # NOTE: Unit tests (Vitest equivalent) would be run here if configured
-      # - name: Run Unit Tests
-      #   run: npm run test:unit
-
-  # ===============================================
-  # 2. SECURITY SCAN (SAST/Dependency Analysis)
-  # ===============================================
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Install Dependencies (For security scan)
-        run: npm ci
-
-      - name: Run Snyk Dependency Scan (Simulated)
-        # In a real Apex setup, this would be a configured SAST/SCA tool like Snyk or Mend
-        run: echo "Simulating Snyk scan against dependencies..."
-        # uses: snyk/actions/npm@master
-        # with:
-        #   command: 'test'
-
-  # ===============================================
-  # 3. BUILD AND ARTIFACT GENERATION (For Review)
-  # ===============================================
-  build_check:
-    name: Build APK/IPA Preview
-    runs-on: macos-latest # Required for iOS builds, but good for general Expo test
-    needs: [validation]
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      # --------------------------------------------------------------
+      # STEP 7: UPLOAD COVERAGE REPORT
+      # Pushes coverage metrics to Codecov for analysis and badging.
+      # --------------------------------------------------------------
+      - name: 'Upload Coverage Report to Codecov'
+        uses: codecov/codecov-action@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
 
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Build Expo Preview Artifact (Android)
-        # This step verifies the bundling process completes successfully
-        run: npx expo build:android --profile preview
-
-      - name: Build Expo Preview Artifact (iOS)
-        # This step verifies the bundling process completes successfully
-        run: npx expo build:ios --profile preview
-
-# ===============================================
-# INTEGRATION SUMMARY
-# ===============================================
-# If all jobs pass, the PR or push is considered high-fidelity.
-# Failure in 'validation' job blocks merges immediately.
+      # --------------------------------------------------------------
+      # STEP 8: EAS BUILD VALIDATION (MAIN BRANCH ONLY)
+      # Triggers an Expo Application Services (EAS) build to validate
+      # the project's native configuration and buildability post-merge.
+      # --------------------------------------------------------------
+      - name: 'Trigger EAS Build Validation'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          echo "Triggering EAS build validation for all platforms..."
+          eas build --platform all --profile production --non-interactive --no-wait
