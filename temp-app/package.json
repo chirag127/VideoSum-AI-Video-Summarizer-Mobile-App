@@ -33,7 +33,7 @@
     "expo-speech": "^13.1.7",
     "expo-splash-screen": "~0.29.23",
     "expo-status-bar": "~2.2.3",
-    "expo-symbols": "~0.2.2",
+    "expo-symbols": "~0.4.5",
     "expo-system-ui": "~4.0.9",
     "expo-web-browser": "~14.2.0",
     "react": "18.3.1",
